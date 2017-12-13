@@ -21,7 +21,7 @@ namespace AudioIndexer.Functions
     {
         static string _azureTenantId = ConfigurationManager.AppSettings["AzureTenantId"];
         static string _azureClientId = ConfigurationManager.AppSettings["AzureClientId"];
-        static string _azureClientKey = ConfigurationManager.AppSettings["AzureClientKey"];
+        static string _azureClientSecret = ConfigurationManager.AppSettings["AzureClientSecret"];
         static string _AMSRESTAPIEndpoint = ConfigurationManager.AppSettings["AMSRESTAPIEndpoint"];
         static string _AMSNotificationWebHookKey = ConfigurationManager.AppSettings["AMSNotificationWebHookKey"];
 
@@ -58,7 +58,7 @@ namespace AudioIndexer.Functions
                         {
                             log.Info("Finished Notification Received");
                             AzureAdTokenCredentials tokenCredentials = new AzureAdTokenCredentials(_azureTenantId,
-                                        new AzureAdClientSymmetricKey(_azureClientId, _azureClientKey),
+                                        new AzureAdClientSymmetricKey(_azureClientId, _azureClientSecret),
                                         AzureEnvironments.AzureCloudEnvironment);
 
                             AzureAdTokenProvider tokenProvider = new AzureAdTokenProvider(tokenCredentials);

@@ -21,10 +21,10 @@ namespace AudioIndexer.Functions
         static string _AMSRESTAPIEndpoint = ConfigurationManager.AppSettings["AMSRESTAPIEndpoint"];
         static string _azureTenantId = ConfigurationManager.AppSettings["AzureTenantId"];
         static string _azureClientId = ConfigurationManager.AppSettings["AzureClientId"];
-        static string _azureClientKey = ConfigurationManager.AppSettings["AzureClientKey"];
+        static string _azureClientSecret = ConfigurationManager.AppSettings["AzureClientSecret"];
 
 
-        static string configurationFile = "";
+        static string configurationFile = "configuration.xml";
 
         [FunctionName("IndexerBegin")]
         public static void Run([BlobTrigger("audio-in/{name}", Connection = "AudioInConnectionString")]CloudBlockBlob inputBlob, string name, TraceWriter log)
@@ -34,7 +34,7 @@ namespace AudioIndexer.Functions
             try
             {
                 AzureAdTokenCredentials tokenCredentials = new AzureAdTokenCredentials(_azureTenantId,
-                                    new AzureAdClientSymmetricKey(_azureClientId, _azureClientKey),
+                                    new AzureAdClientSymmetricKey(_azureClientId, _azureClientSecret),
                                     AzureEnvironments.AzureCloudEnvironment);
 
                 AzureAdTokenProvider tokenProvider = new AzureAdTokenProvider(tokenCredentials);
@@ -61,8 +61,7 @@ namespace AudioIndexer.Functions
                 string MediaProcessorName = "Azure Media Indexer";  // Get a reference to the Azure Media Indexer.
                 IMediaProcessor processor = GetLatestMediaProcessorByName(MediaProcessorName);
 
-                // Read configuration from file if specified.
-                string configuration = string.IsNullOrEmpty(configurationFile) ? "" : File.ReadAllText(configurationFile);
+                string configuration = LoadConfiguration(log);
 
                 ITask task = job.Tasks.AddNew("Audio Indexing Task",
                     processor,
@@ -74,11 +73,36 @@ namespace AudioIndexer.Functions
                 task.TaskNotificationSubscriptions.AddNew(NotificationJobState.All, endpoint, true);
 
                 job.Submit();
+                log.Info($"Indexer Job Submitted for '{name}'.");
             }
             catch (Exception ex)
             {
                 log.Info("Exception: " + ex.Message);
             }
+        }
+
+        private static string LoadConfiguration(TraceWriter log)
+        {
+            string configuration = string.Empty;
+
+            if (!string.IsNullOrEmpty(configurationFile))
+            {
+                string homePath = Environment.GetEnvironmentVariable("HOME", EnvironmentVariableTarget.Process);
+                string configPath;
+                if (string.IsNullOrEmpty(homePath))
+                {
+                    configPath = @"configuration.xml";
+                }
+                else
+                {
+                    configPath = Path.Combine(homePath, @"site\wwwroot\" + configurationFile);
+                }
+
+                log.Info(configPath);
+                // Read configuration from file if specified.
+                configuration = File.ReadAllText(configPath);
+            }
+            return configuration;
         }
 
         static IMediaProcessor GetLatestMediaProcessorByName(string mediaProcessorName)

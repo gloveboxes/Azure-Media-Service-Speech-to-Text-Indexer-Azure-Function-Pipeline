@@ -25,6 +25,9 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <None Update="configuration.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="host.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
